@@ -12,11 +12,13 @@ import (
 	"strings"
 )
 
+// Client provides a client to interact with the KSQL REST API
 type Client struct {
 	client *http.Client
 	host   string
 }
 
+// NewClient returns a new client
 func NewClient(host string) *Client {
 	return &Client{
 		host:   host,
@@ -24,6 +26,7 @@ func NewClient(host string) *Client {
 	}
 }
 
+// ListStreams returns a slice of available streams
 func (c *Client) ListStreams() ([]Stream, error) {
 	r := Request{
 		KSQL: "LIST STREAMS;",
@@ -38,6 +41,7 @@ func (c *Client) ListStreams() ([]Stream, error) {
 	return resp[0].Streams.Streams, nil
 }
 
+// ListTables returns a slice of available tables
 func (c *Client) ListTables() ([]Table, error) {
 	r := Request{
 		KSQL: "LIST Tables;",
@@ -52,6 +56,7 @@ func (c *Client) ListTables() ([]Table, error) {
 	return resp[0].Tables.Tables, nil
 }
 
+// Do provides a way for running queries against the `/ksql` endpoint
 func (c *Client) Do(r Request) (Response, error) {
 	res, err := c.ksqlRequest(r)
 	if err != nil {
@@ -77,6 +82,8 @@ func (c *Client) Do(r Request) (Response, error) {
 	}
 	return resp, nil
 }
+
+// Status provides a way to check the status of a previous command
 func (c *Client) Status(commandID string) (*StatusResponse, error) {
 	req, err := http.NewRequest("GET", c.host+"/status?commandID="+commandID, nil)
 	if err != nil {
@@ -99,6 +106,7 @@ func (c *Client) Status(commandID string) (*StatusResponse, error) {
 	return s, err
 }
 
+// Query provides a way to check the status of a previous command
 func (c *Client) Query(r Request, ch chan *QueryResponse) error {
 	resp, err := c.DoQuery(r)
 	if err != nil {
