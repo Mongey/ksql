@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -85,7 +86,7 @@ func (c *Client) Do(r Request) (Response, error) {
 
 // Status provides a way to check the status of a previous command
 func (c *Client) Status(commandID string) (*StatusResponse, error) {
-	req, err := http.NewRequest("GET", c.host+"/status?commandID="+commandID, nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/status?commandID=%s", c.host, commandID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -106,9 +107,9 @@ func (c *Client) Status(commandID string) (*StatusResponse, error) {
 	return s, err
 }
 
-// Query provides a way to check the status of a previous command
+// Query runs a Request, parsing the response and sending each on the channel
 func (c *Client) Query(r Request, ch chan *QueryResponse) error {
-	resp, err := c.DoQuery(r)
+	resp, err := c.doQuery(r)
 	if err != nil {
 		return err
 	}
@@ -131,8 +132,10 @@ func (c *Client) Query(r Request, ch chan *QueryResponse) error {
 	return err
 }
 
+// LimitQuery runs a Request and returns the entire response
+// Only use this with a query that contains a limit, or it will never return
 func (c *Client) LimitQuery(r Request) ([]*QueryResponse, error) {
-	resp, err := c.DoQuery(r)
+	resp, err := c.doQuery(r)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +160,20 @@ func (c *Client) LimitQuery(r Request) ([]*QueryResponse, error) {
 	return qrs, err
 }
 
+func (c *Client) doQuery(r Request) (*http.Response, error) {
+	b, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/query", c.host), bytes.NewBuffer(b))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	return c.client.Do(req)
+}
+
 func readQR(rd *bufio.Reader) (*QueryResponse, error) {
 	line, err := rd.ReadBytes('\n')
 	if err != nil {
@@ -171,25 +188,12 @@ func readQR(rd *bufio.Reader) (*QueryResponse, error) {
 	return q, err
 }
 
-func (c *Client) DoQuery(r Request) (*http.Response, error) {
-	b, err := json.Marshal(r)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", c.host+"/query", bytes.NewBuffer(b))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	return c.client.Do(req)
-}
 func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	b, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("POST", c.host+"/ksql", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/ksql", c.host), bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
 	}
