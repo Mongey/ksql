@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/Mongey/ksql
+    docker:
+      - image: circleci/golang:1.10
+      - image: confluentinc/cp-zookeeper:4.1.0
+        environment:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+      - image: confluentinc/cp-kafka:4.1.0
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - image: confluentinc/ksql-cli:4.1.0
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: go test $(go list ./... |grep -v 'vendor') -v -timeout 120m
