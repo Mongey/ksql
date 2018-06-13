@@ -39,10 +39,13 @@ func main() {
 	}
 	log.Println("=>>> Forever Query :")
 	ch := make(chan *ksql.QueryResponse)
+
 	go c.Query(ksql.Request{KSQL: "SELECT pageid FROM pageviews_original;"}, ch)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for {
 		select {
 		case msg := <-ch:

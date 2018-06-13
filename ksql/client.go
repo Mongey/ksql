@@ -19,12 +19,36 @@ type Client struct {
 	host   string
 }
 
+type queryRequest interface {
+	query() string
+}
+
 // NewClient returns a new client
 func NewClient(host string) *Client {
 	return &Client{
 		host:   host,
 		client: &http.Client{},
 	}
+}
+
+// CreateTable creates a KSQL Table
+func (c *Client) CreateTable(req *CreateTableRequest) error {
+	return c.qTOerr(req)
+}
+
+// CreateStream creates a KSQL Stream
+func (c *Client) CreateStream(req *CreateStreamRequest) error {
+	return c.qTOerr(req)
+}
+
+// DropTable drops a KSQL Table
+func (c *Client) DropTable(req *DropTableRequest) error {
+	return c.qTOerr(req)
+}
+
+// DropStream drops a KSQL Stream
+func (c *Client) DropStream(req *DropStreamRequest) error {
+	return c.qTOerr(req)
 }
 
 // ListStreams returns a slice of available streams
@@ -200,4 +224,15 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	return c.client.Do(req)
+}
+
+func (c *Client) qTOerr(req queryRequest) error {
+	r := Request{
+		KSQL: req.query(),
+	}
+
+	res, err := c.Do(r)
+	log.Printf("[DEBUG] %v", res)
+
+	return err
 }
