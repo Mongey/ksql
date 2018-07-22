@@ -35,29 +35,29 @@ func (r *CreateRequest) query() string {
 }
 
 type CreateTableRequest struct {
-	name     string
-	fields   map[string]string
-	settings map[string]string
+	Name     string
+	Fields   map[string]string
+	Settings map[string]string
 }
 
 type CreateStreamRequest struct {
-	name     string
-	fields   map[string]string
-	settings map[string]string
+	Name     string
+	Fields   map[string]string
+	Settings map[string]string
 }
 
 func (r *CreateStreamRequest) query() string {
 	return (&CreateRequest{
 		t:        StreamType,
-		fields:   r.fields,
-		name:     r.name,
-		settings: r.settings}).query()
+		fields:   r.Fields,
+		name:     r.Name,
+		settings: r.Settings}).query()
 }
 
 func (r *CreateTableRequest) query() string {
 	return (&CreateRequest{
 		t:        TableType,
-		fields:   r.fields,
-		name:     r.name,
-		settings: r.settings}).query()
+		fields:   r.Fields,
+		name:     r.Name,
+		settings: r.Settings}).query()
 }

@@ -19,10 +19,6 @@ type Client struct {
 	host   string
 }
 
-type queryRequest interface {
-	query() string
-}
-
 // NewClient returns a new client
 func NewClient(host string) *Client {
 	return &Client{
@@ -235,4 +231,8 @@ func (c *Client) qTOerr(req queryRequest) error {
 	log.Printf("[DEBUG] %v", res)
 
 	return err
+}
+
+type queryRequest interface {
+	query() string
 }

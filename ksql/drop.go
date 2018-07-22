@@ -3,11 +3,11 @@ package ksql
 import "fmt"
 
 type DropTableRequest struct {
-	name string
+	Name string
 }
 
 type DropStreamRequest struct {
-	name string
+	Name string
 }
 
 type dropRequest struct {
@@ -16,11 +16,11 @@ type dropRequest struct {
 }
 
 func (r *DropTableRequest) query() string {
-	return (&dropRequest{t: TableType, name: r.name}).query()
+	return (&dropRequest{t: TableType, name: r.Name}).query()
 }
 
 func (r *DropStreamRequest) query() string {
-	return (&dropRequest{t: StreamType, name: r.name}).query()
+	return (&dropRequest{t: StreamType, name: r.Name}).query()
 }
 
 func (req *dropRequest) query() string {
