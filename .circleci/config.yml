@@ -4,7 +4,7 @@ jobs:
     working_directory: /go/src/github.com/Mongey/ksql
     docker:
       - image: circleci/golang:1.11
-      - image: confluentinc/cp-zookeeper:4.1.0
+      - image: confluentinc/cp-zookeeper:5.0.0
         environment:
           ZOOKEEPER_CLIENT_PORT: 2181
           ZOOKEEPER_TICK_TIME: 2000
