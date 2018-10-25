@@ -63,3 +63,9 @@ type ListShowStreamsResponse []struct {
 	StatementText string   `json:"statementText"`
 	Streams       []Stream `json:"streams"`
 }
+
+type ListShowTablesResponse []struct {
+	Type          string  `json:"@type"`
+	StatementText string  `json:"statementText"`
+	Tables        []Table `json:"tables"`
+}

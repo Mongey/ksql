@@ -91,14 +91,26 @@ func (c *Client) ListTables() ([]Table, error) {
 	r := Request{
 		KSQL: "LIST Tables;",
 	}
-	resp, err := c.Do(r)
+
+	resp, err := c.ksqlRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	if len(resp) < 1 {
-		return nil, errors.New("Didn't get enough responses")
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
-	return resp[0].Tables.Tables, nil
+
+	res := ListShowTablesResponse{}
+	err = json.Unmarshal(body, &res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res[0].Tables, nil
 }
 
 func (c *Client) Info() (*KSQLServerInfo, error) {
