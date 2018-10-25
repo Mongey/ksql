@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -20,18 +21,47 @@ type CreateRequest struct {
 }
 
 func (r *CreateRequest) query() string {
-	joined := []string{}
-	for k, v := range r.fields {
-		joined = append(joined, fmt.Sprintf("%s %s", k, v))
-	}
-	fields := strings.Join(joined, ", ")
+	f := r.sortedFields()
+	fields := strings.Join(f, ", ")
 
-	joined = []string{}
-	for k, v := range r.settings {
-		joined = append(joined, fmt.Sprintf("%s='%s'", k, v))
-	}
-	with := strings.Join(joined, ", ")
+	s := r.sortedWith()
+	with := strings.Join(s, ", ")
+
 	return fmt.Sprintf("CREATE %s %s (%s) WITH (%s);", r.t, r.name, fields, with)
+}
+
+func (r *CreateRequest) sortedWith() []string {
+	pairs := []string{}
+
+	var sortedFields []string
+	for k := range r.settings {
+		sortedFields = append(sortedFields, k)
+	}
+	sort.Strings(sortedFields)
+
+	for _, k := range sortedFields {
+		v := r.settings[k]
+		pairs = append(pairs, fmt.Sprintf("%s='%s'", k, v))
+	}
+
+	return pairs
+}
+
+func (r *CreateRequest) sortedFields() []string {
+	pairs := []string{}
+
+	var sortedFields []string
+	for k := range r.fields {
+		sortedFields = append(sortedFields, k)
+	}
+	sort.Strings(sortedFields)
+
+	for _, k := range sortedFields {
+		v := r.fields[k]
+		pairs = append(pairs, fmt.Sprintf("%s %s", k, v))
+	}
+
+	return pairs
 }
 
 type CreateTableRequest struct {
