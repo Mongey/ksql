@@ -13,6 +13,18 @@ import (
 	"strings"
 )
 
+type KSQLServerInfo struct {
+	Version        string `json:"version"`
+	KafkaClusterID string `json:"kafkaClusterId"`
+	KSQLServiceID  string `json:"ksqlServiceId"`
+}
+
+type InfoResponse struct {
+	Info KSQLServerInfo `json:"KsqlServerInfo"`
+}
+
+const AcceptHeader = "application/vnd.ksql.v1+json"
+
 // Client provides a client to interact with the KSQL REST API
 type Client struct {
 	client *http.Client
@@ -52,14 +64,26 @@ func (c *Client) ListStreams() ([]Stream, error) {
 	r := Request{
 		KSQL: "LIST STREAMS;",
 	}
-	resp, err := c.Do(r)
+	resp, err := c.ksqlRequest(r)
 	if err != nil {
 		return nil, err
 	}
-	if len(resp) < 1 {
-		return nil, errors.New("Didn't get enough responses")
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
-	return resp[0].Streams.Streams, nil
+
+	res := ListShowStreamsResponse{}
+	err = json.Unmarshal(body, &res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res[0].Streams, nil
 }
 
 // ListTables returns a slice of available tables
@@ -75,6 +99,30 @@ func (c *Client) ListTables() ([]Table, error) {
 		return nil, errors.New("Didn't get enough responses")
 	}
 	return resp[0].Tables.Tables, nil
+}
+
+func (c *Client) Info() (*KSQLServerInfo, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", c.host), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] %s", string(body))
+	s := &InfoResponse{}
+	err = json.Unmarshal(body, s)
+
+	return &s.Info, err
 }
 
 // Do provides a way for running queries against the `/ksql` endpoint
@@ -190,7 +238,9 @@ func (c *Client) doQuery(r Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	req.Header.Set("Accept", AcceptHeader)
 	req.Header.Set("Content-Type", "application/json")
+
 	return c.client.Do(req)
 }
 
@@ -218,6 +268,7 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	req.Header.Set("Accept", AcceptHeader)
 	req.Header.Set("Content-Type", "application/json")
 	return c.client.Do(req)
 }

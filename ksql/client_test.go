@@ -7,14 +7,6 @@ import (
 	kafka "github.com/Mongey/terraform-provider-kafka/kafka"
 )
 
-func createSimpleTopic(kc *kafka.Client, topicName string) error {
-	return kc.CreateTopic(kafka.Topic{
-		Name:              topicName,
-		Partitions:        1,
-		ReplicationFactor: 1,
-	})
-}
-
 func TestCreateAndListStreams(t *testing.T) {
 	kc, err := kafka.NewClient(&kafka.Config{
 		BootstrapServers: &[]string{"localhost:9092"},
@@ -29,6 +21,8 @@ func TestCreateAndListStreams(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	defer kc.DeleteTopic(topic)
 
 	c := NewClient("http://localhost:8088")
 	defer deleteAllTablesAndStreams(t, c)
@@ -88,16 +82,6 @@ func TestCreateTableRequest(t *testing.T) {
 }
 
 func deleteAllTablesAndStreams(t *testing.T, c *Client) {
-	streams, err := c.ListStreams()
-	if err != nil {
-		t.Fatalf("Failed to list streams: %s", err)
-	}
-
-	for _, stream := range streams {
-		c.DropStream(&DropStreamRequest{
-			Name: stream.Name,
-		})
-	}
 	tables, err := c.ListTables()
 	if err != nil {
 		t.Fatalf("Failed to list streams: %s", err)
@@ -108,4 +92,23 @@ func deleteAllTablesAndStreams(t *testing.T, c *Client) {
 			Name: table.Name,
 		})
 	}
+
+	streams, err := c.ListStreams()
+	if err != nil {
+		t.Fatalf("Failed to list streams: %s", err)
+	}
+
+	for _, stream := range streams {
+		c.DropStream(&DropStreamRequest{
+			Name: stream.Name,
+		})
+	}
+}
+
+func createSimpleTopic(kc *kafka.Client, topicName string) error {
+	return kc.CreateTopic(kafka.Topic{
+		Name:              topicName,
+		Partitions:        1,
+		ReplicationFactor: 1,
+	})
 }

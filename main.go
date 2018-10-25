@@ -15,32 +15,35 @@ func main() {
 		Timeout:          100,
 	}
 
-	c2, err := kafka.NewClient(cfg)
-	log.Printf("[DEBUG] Client %s", err)
-	err = c2.CreateTopic(kafka.Topic{
+	kafkaClient, err := kafka.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("[FATAL] Could not construct Kafka Client")
+	}
+
+	err = kafkaClient.CreateTopic(kafka.Topic{
 		Name:              "pageviews_original",
 		Partitions:        1,
 		ReplicationFactor: 1,
 		Config:            map[string]*string{},
 	})
-	defer c2.DeleteTopic("pageviews_original")
+	defer kafkaClient.DeleteTopic("pageviews_original")
 
-	log.Printf("[DEBUG] t1 %s", err)
+	log.Printf("[DEBUG] Topic 1 creation: %s", err)
 
-	err = c2.CreateTopic(kafka.Topic{
+	err = kafkaClient.CreateTopic(kafka.Topic{
 		Name:              "pageviews",
 		Partitions:        1,
 		ReplicationFactor: 1,
 		Config:            map[string]*string{},
 	})
-	defer c2.DeleteTopic("pageviews")
+	defer kafkaClient.DeleteTopic("pageviews")
 
-	log.Printf("[DEBUG] t2 %s", err)
+	log.Printf("[DEBUG] Topic 2 creation: %s", err)
 
 	r := ksql.Request{
 		KSQL: `CREATE STREAM pageviews_original
-		(viewtime bigint, userid varchar, pageid varchar)
-		WITH (kafka_topic='pageviews', value_format='DELIMITED');`,
+	(viewtime bigint, userid varchar, pageid varchar)
+	WITH (kafka_topic='pageviews', value_format='DELIMITED');`,
 	}
 
 	dr := &ksql.DropStreamRequest{Name: "pageviews_original"}
@@ -60,13 +63,13 @@ func main() {
 	}
 
 	log.Println("=>>> Tables")
-	tables, err := c.ListTables()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for i, v := range tables {
-		log.Printf("Table %d: %s", i, v.Name)
-	}
+	//tables, err := c.ListTables()
+	//if err != nil {
+	//log.Fatal(err)
+	//}
+	//for i, v := range tables {
+	//log.Printf("Table %d: %s", i, v.Name)
+	//}
 
 	//log.Println("=>>> Limited Query:")
 	//sql := "SELECT pageid FROM pageviews_original LIMIT 3;"
@@ -80,5 +83,10 @@ func main() {
 	//log.Printf("%d:%v\n", i, v.Row)
 	//}
 	//}
+	info, err := c.Info()
+	if err != nil {
+		log.Fatalf("[ERROR] %s", err)
+	}
 
+	log.Printf("[INFO] Running against %s", info.Version)
 }
