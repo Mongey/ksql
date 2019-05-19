@@ -133,7 +133,12 @@ func (c *Client) Status(commandID string) (*StatusResponse, error) {
 
 // Query runs a Request, parsing the response and sending each on the channel
 func (c *Client) Query(r Request, ch chan *QueryResponse) error {
-	resp, err := c.doQuery(r)
+	return c.QueryContext(c, r, ch)
+}
+
+// QueryContext is a cancelable version of Query
+func (c *Client) QueryContext(ctx context.Context, r Request, ch chan *QueryResponse) error {
+	resp, err := c.doQueryContext(ctx, r)
 	if err != nil {
 		return err
 	}
@@ -153,7 +158,7 @@ func (c *Client) Query(r Request, ch chan *QueryResponse) error {
 		}
 		select {
 		case ch <- q:
-		case <-c.Done():
+		case <-ctx.Done():
 			return nil
 		}
 	}
@@ -189,6 +194,10 @@ func (c *Client) LimitQuery(r Request) ([]*QueryResponse, error) {
 }
 
 func (c *Client) doQuery(r Request) (*http.Response, error) {
+	return c.doQueryContext(c, r)
+}
+
+func (c *Client) doQueryContext(ctx context.Context, r Request) (*http.Response, error) {
 	b, err := json.Marshal(r)
 	if err != nil {
 		return nil, err
@@ -197,7 +206,7 @@ func (c *Client) doQuery(r Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(c)
+	req = req.WithContext(ctx)
 
 	req.Header.Set("Content-Type", "application/json")
 	return c.client.Do(req)
