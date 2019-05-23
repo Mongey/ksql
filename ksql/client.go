@@ -152,6 +152,9 @@ func (c *Client) QueryContext(ctx context.Context, r Request, ch chan *QueryResp
 		}
 		if err != nil {
 			c.Logger.Printf("error reading results from ksql query %#v: %s", r.KSQL, err)
+			if err, ok := err.(net.Error); ok && !err.Temporary() {
+				return err
+			}
 		}
 		if q == nil {
 			continue
