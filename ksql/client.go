@@ -10,8 +10,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Logger provides a pluggable interface for caller-provided loggers
@@ -35,12 +37,25 @@ func NewClient(host string) *Client {
 // NewClientContext returns a new client which supports cancelation
 // via the context
 func NewClientContext(ctx context.Context, host string) *Client {
-	return &Client{
+	c := &Client{
 		Context: ctx,
 		host:    host,
 		client:  &http.Client{},
 		Logger:  stdLogger{},
 	}
+	c.client.Transport = &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		DisableCompression:    true,
+	}
+	return c
 }
 
 type stdLogger struct{}
