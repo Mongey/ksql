@@ -162,11 +162,14 @@ func (c *Client) QueryContext(ctx context.Context, r Request, ch chan *QueryResp
 	reader := bufio.NewReader(resp.Body)
 	for {
 		q, err := readQR(reader)
-		if err == io.EOF {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			break
 		}
 		if err != nil {
 			c.Logger.Printf("error reading results from ksql query %#v: %s", r.KSQL, err)
+			if err, ok := err.(net.Error); ok && !err.Temporary() {
+				return err
+			}
 		}
 		if q == nil {
 			continue
