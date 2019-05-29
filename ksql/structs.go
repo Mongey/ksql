@@ -10,6 +10,7 @@ type QueryResponse struct {
 		Columns []interface{} `json:"columns"`
 	} `json:"row"`
 	ErrorMessage ErrorMessage `json:"errorMessage"`
+	FinalMessage ErrorMessage `json:"finalMessage"`
 }
 
 type Request struct {
@@ -19,26 +20,26 @@ type Request struct {
 }
 
 type Response []struct {
-	Error *struct {
-		StatementText string       `json:"statementText"`
-		ErrorMessage  ErrorMessage `json:"errorMessage"`
-	} `json:"error,omitempty"`
-	Streams *struct {
-		StatementText string   `json:"statementText"`
-		Streams       []Stream `json:"streams"`
-	} `json:"streams"`
-	Tables *struct {
-		StatementText string  `json:"statementText"`
-		Tables        []Table `json:"tables"`
-	} `json:"tables"`
-	Status *struct {
-		StatementText string `json:"statementText"`
-		CommandID     string `json:"commandId"`
-		CommandStatus *struct {
-			Message string `json:"message"`
-			Status  string `json:"status"`
-		} `json:"commandStatus"`
-	} `json:"currentStatus"`
+	Type          string `json:"@type"`
+	StatementText string `json:"statementText"`
+
+	// error responses
+	StackTrace []string `json:"stackTrace"`
+	ErrorCode  int      `json:"error_code"`
+	Message    string   `json:"message"`
+	// plus entities... list of something
+
+	// response to various queries
+	Streams   []Stream   `json:"streams"`
+	Tables    []Table    `json:"tables"`
+	Queries   []Query    `json:"queries"`
+	Topics    []Topic    `json:"topics"`
+	Functions []Function `json:"functions"`
+
+	// responses to 'show properties'
+	Properties            map[string]string `json:"properties"`
+	OverwrittenProperties []string          `json:"overwrittenProperties"`
+	DefaultProperties     []string          `json:"defaultProperties"`
 }
 
 type StatusResponse struct {
@@ -52,7 +53,30 @@ type Stream struct {
 	Format string `json:"format"`
 }
 type Table struct {
-	Name   string `json:"name"`
-	Topic  string `json:"topic"`
-	Format string `json:"format"`
+	Name     string `json:"name"`
+	Topic    string `json:"topic"`
+	Format   string `json:"format"`
+	Windowed bool   `json:"isWindowed"`
+}
+
+// Query is an item in a 'SHOW QUERIES' response
+type Query struct {
+	ID    string   `json:"id"`
+	Sinks []string `json:"sinks"` // streams/tables, presumably
+	KSQL  string   `json:"queryString"`
+}
+
+// Topic is an item in a 'SHOW TOPICS' response
+type Topic struct {
+	Name           string `json:"name"`
+	Registered     bool   `json:"registered"`
+	ReplicaInfo    []int  `json:"replicaInfo"`
+	Consumers      int    `json:"consumerCount"`
+	GroupConsumers int    `json:"consumerGroupCount"`
+}
+
+// Function is an item in a 'SHOW FUNCTIONS' response
+type Function struct {
+	Name string `json:"name"`
+	Type string `json:"type"` // 'scalar' or 'aggregate'
 }

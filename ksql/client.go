@@ -77,7 +77,7 @@ func (c *Client) ListStreams() ([]Stream, error) {
 	if len(resp) < 1 {
 		return nil, errors.New("Didn't get enough responses")
 	}
-	return resp[0].Streams.Streams, nil
+	return resp[0].Streams, nil
 }
 
 // ListTables returns a slice of available tables
@@ -92,7 +92,7 @@ func (c *Client) ListTables() ([]Table, error) {
 	if len(resp) < 1 {
 		return nil, errors.New("Didn't get enough responses")
 	}
-	return resp[0].Tables.Tables, nil
+	return resp[0].Tables, nil
 }
 
 // Do provides a way for running queries against the `/ksql` endpoint
@@ -116,8 +116,8 @@ func (c *Client) Do(r Request) (Response, error) {
 		return nil, err
 	}
 
-	if resp[0].Error != nil {
-		return nil, errors.New(resp[0].Error.ErrorMessage.Message + "\n" + strings.Join(resp[0].Error.ErrorMessage.StackTrace, "\n"))
+	if resp[0].ErrorCode != 0 {
+		return nil, errors.New(resp[0].Message + "\n" + strings.Join(resp[0].StackTrace, "\n"))
 	}
 	return resp, nil
 }
