@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -203,9 +202,9 @@ func (c *Client) Do(r Request) (Response, error) {
 		return nil, err
 	}
 
-	if resp[0].ErrorCode != 0 {
-		return nil, errors.New(resp[0].Message + "\n" + strings.Join(resp[0].StackTrace, "\n"))
-	}
+	//if resp[0].ErrorCode != 0 {
+	//return nil, errors.New(resp[0].Message + "\n" + strings.Join(resp[0].StackTrace, "\n"))
+	//}
 
 	return nil, errorResp
 }
