@@ -96,6 +96,33 @@ func (c *Client) DropStream(req *DropStreamRequest) error {
 	return c.qTOerr(req)
 }
 
+// Describe gets a KSQL Stream or Table
+func (c *Client) Describe(name string) (*SourceDescription, error) {
+	r := Request{
+		KSQL: fmt.Sprintf("DESCRIBE %s;", name),
+	}
+	resp, err := c.ksqlRequest(r)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := DescribeResponse{}
+	err = json.Unmarshal(body, &res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &res[0].SourceDescription, nil
+}
+
 // ListStreams returns a slice of available streams
 func (c *Client) ListStreams() ([]Stream, error) {
 	r := Request{

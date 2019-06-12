@@ -88,3 +88,43 @@ type ListShowTablesResponse []struct {
 	StatementText string  `json:"statementText"`
 	Tables        []Table `json:"tables"`
 }
+
+type Query struct {
+	QueryString string   `json:"queryString"`
+	Sinks       []string `json:"sinks"`
+	ID          string   `json:"id"`
+}
+
+type StreamsAndTablesSchema struct {
+	Type         string                 `json:"type"`         // type (string) -- The type the schema represents. One of INTEGER, BIGINT, BOOLEAN, DOUBLE, STRING, MAP, ARRAY, or STRUCT.
+	MemberSchema struct{}               `json:"memberSchema"` // memberSchema (object) -- A schema object. For MAP and ARRAY types, contains the schema of the map values and array elements, respectively. For other types this field is not used and its value is undefined.
+	Fields       StreamsAndTablesFields `json:"fields"`       // fields (array) -- For STRUCT types, contains a list of field objects that descrbies each field within the struct. For other types this field is not used and its value is undefined.
+}
+
+type StreamsAndTablesFields []struct {
+	Name   string                 `json:"name"`   // name   (string) -- The name of the field.
+	Schema StreamsAndTablesSchema `json:"schema"` // schema (object) -- A schema object that describes the schema of the field.
+}
+
+type SourceDescription struct {
+	Name         string                 `json:"name"`         // name         (string)  -- The name of the stream or table.
+	ReadQueries  []Query                `json:"readQueries"`  // readQueries  (array)   -- The queries reading from the stream or table.
+	WriteQueries []Query                `json:"writeQueries"` // writeQueries (array)   -- The queries writing into the stream or table
+	Fields       StreamsAndTablesFields `json:"fields"`       // fields       (array)   -- A list of field objects that describes each field in the stream/table.
+	Type         string                 `json:"type"`         // type         (string)  -- STREAM or TABLE
+	key          string                 `json:"key"`          // key          (string)  -- The name of the key column.
+	timestamp    string                 `json:"timestamp"`    // timestamp    (string)  -- The name of the timestamp column.
+	format       string                 `json:"format"`       // format       (string)  -- The serialization format of the data in the stream or table. One of JSON, AVRO, or DELIMITED.
+	topic        string                 `json:"topic"`        // topic        (string)  -- The topic backing the stream or table.
+	extended     bool                   `json:"extended"`     // extended     (boolean) -- A boolean that indicates whether this is an extended description.
+	statistics   string                 `json:"statistics"`   // statistics   (string)  -- A string that contains statistics about production and consumption to and from the backing topic (extended only).
+	errorStats   string                 `json:"errorStats"`   // errorStats   (string)  -- A string that contains statistics about errors producing and consuming to and from the backing topic (extended only).
+	replication  string                 `json:"replication"`  // replication  (int)     -- The replication factor of the backing topic (extended only).
+	partitions   string                 `json:"partitions"`   // partitions   (int)     -- The number of partitions in the backing topic (extended only).
+}
+
+type DescribeResponse []struct {
+	Type              string            `json:"@type"`
+	StatementText     string            `json:"statementText"`
+	SourceDescription SourceDescription `json:"sourceDescription"`
+}
