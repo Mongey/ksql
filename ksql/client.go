@@ -177,6 +177,12 @@ func (c *Client) ListTables() ([]Table, error) {
 	return res[0].Tables, nil
 }
 
+// Terminate terminates the query
+func (c *Client) Terminate(req *TerminateRequest) error {
+	return c.qTOerr(req)
+}
+
+// Info returns KSQL server info
 func (c *Client) Info() (*KSQLServerInfo, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", c.host), nil)
 	if err != nil {
