@@ -112,15 +112,15 @@ type SourceDescription struct {
 	WriteQueries []Query                `json:"writeQueries"` // writeQueries (array)   -- The queries writing into the stream or table
 	Fields       StreamsAndTablesFields `json:"fields"`       // fields       (array)   -- A list of field objects that describes each field in the stream/table.
 	Type         string                 `json:"type"`         // type         (string)  -- STREAM or TABLE
-	key          string                 `json:"key"`          // key          (string)  -- The name of the key column.
-	timestamp    string                 `json:"timestamp"`    // timestamp    (string)  -- The name of the timestamp column.
-	format       string                 `json:"format"`       // format       (string)  -- The serialization format of the data in the stream or table. One of JSON, AVRO, or DELIMITED.
-	topic        string                 `json:"topic"`        // topic        (string)  -- The topic backing the stream or table.
-	extended     bool                   `json:"extended"`     // extended     (boolean) -- A boolean that indicates whether this is an extended description.
-	statistics   string                 `json:"statistics"`   // statistics   (string)  -- A string that contains statistics about production and consumption to and from the backing topic (extended only).
-	errorStats   string                 `json:"errorStats"`   // errorStats   (string)  -- A string that contains statistics about errors producing and consuming to and from the backing topic (extended only).
-	replication  string                 `json:"replication"`  // replication  (int)     -- The replication factor of the backing topic (extended only).
-	partitions   string                 `json:"partitions"`   // partitions   (int)     -- The number of partitions in the backing topic (extended only).
+	Key          string                 `json:"key"`          // key          (string)  -- The name of the key column.
+	Timestamp    string                 `json:"timestamp"`    // timestamp    (string)  -- The name of the timestamp column.
+	Format       string                 `json:"format"`       // format       (string)  -- The serialization format of the data in the stream or table. One of JSON, AVRO, or DELIMITED.
+	Topic        string                 `json:"topic"`        // topic        (string)  -- The topic backing the stream or table.
+	Extended     bool                   `json:"extended"`     // extended     (boolean) -- A boolean that indicates whether this is an extended description.
+	Statistics   string                 `json:"statistics"`   // statistics   (string)  -- A string that contains statistics about production and consumption to and from the backing topic (extended only).
+	ErrorStats   string                 `json:"errorStats"`   // errorStats   (string)  -- A string that contains statistics about errors producing and consuming to and from the backing topic (extended only).
+	Replication  string                 `json:"replication"`  // replication  (int)     -- The replication factor of the backing topic (extended only).
+	Partitions   string                 `json:"partitions"`   // partitions   (int)     -- The number of partitions in the backing topic (extended only).
 }
 
 type DescribeResponse []struct {
