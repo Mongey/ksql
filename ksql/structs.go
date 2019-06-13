@@ -38,6 +38,10 @@ func (e *ErrResp) Error() string {
 }
 
 type IntResponse struct {
+	Description *struct {
+		StatementText     string            `json:"statementText"`
+		SourceDescription SourceDescription `json:"sourceDescription"`
+	} `json:"sourceDescription,omitempty"`
 	Error *struct {
 		StatementText string       `json:"statementText"`
 		ErrorMessage  ErrorMessage `json:"errorMessage"`
