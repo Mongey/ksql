@@ -154,8 +154,8 @@ type SourceDescription struct {
 	Extended     bool                   `json:"extended"`     // A boolean that indicates whether this is an extended description.
 	Statistics   string                 `json:"statistics"`   // A string that contains statistics about production and consumption to and from the backing topic (extended only).
 	ErrorStats   string                 `json:"errorStats"`   // A string that contains statistics about errors producing and consuming to and from the backing topic (extended only).
-	Replication  string                 `json:"replication"`  // The replication factor of the backing topic (extended only).
-	Partitions   string                 `json:"partitions"`   // The number of partitions in the backing topic (extended only).
+	Replication  int                    `json:"replication"`  // The replication factor of the backing topic (extended only).
+	Partitions   int                    `json:"partitions"`   // The number of partitions in the backing topic (extended only).
 }
 
 // DescribeResponse represents the KSQL REST API response of a "DESCRIBE" query.
