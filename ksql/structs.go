@@ -5,6 +5,18 @@ import (
 	"strings"
 )
 
+// TopicValueFormat represents the serialization format of the message value in the topic.
+type TopicValueFormat string
+
+const (
+	// AvroValueFormat is the 'Avro' topic's data serialization format.
+	AvroValueFormat TopicValueFormat = "AVRO"
+	// JSONValueFormat is the 'JSON' topic's data serialization format.
+	JSONValueFormat TopicValueFormat = "JSON"
+	// DelimitedValueFormat is the 'Delimited' topic's data serialization format (csv, ...).
+	DelimitedValueFormat TopicValueFormat = "DELIMITED"
+)
+
 // ErrorMessage represents an error message with its stack trace.
 type ErrorMessage struct {
 	Message    string   `json:"message"`
@@ -88,16 +100,16 @@ type StatusResponse struct {
 
 // Stream represents a KSQL "Stream". See https://docs.confluent.io/current/ksql/docs/developer-guide/syntax-reference.html#stream.
 type Stream struct {
-	Name   string `json:"name"`
-	Topic  string `json:"topic"`
-	Format string `json:"format"`
+	Name   string           `json:"name"`
+	Topic  string           `json:"topic"`
+	Format TopicValueFormat `json:"format"`
 }
 
 // Table represents a KSQL "Table". See https://docs.confluent.io/current/ksql/docs/developer-guide/syntax-reference.html#table
 type Table struct {
-	Name   string `json:"name"`
-	Topic  string `json:"topic"`
-	Format string `json:"format"`
+	Name   string           `json:"name"`
+	Topic  string           `json:"topic"`
+	Format TopicValueFormat `json:"format"`
 }
 
 // ListShowStreamsResponse represents the KSQL REST API response of a "LIST"/"SHOW" for "STREAMS" request.
@@ -149,7 +161,7 @@ type SourceDescription struct {
 	Type         string                 `json:"type"`         // STREAM or TABLE
 	Key          string                 `json:"key"`          // The name of the key column.
 	Timestamp    string                 `json:"timestamp"`    // The name of the timestamp column.
-	Format       string                 `json:"format"`       // The serialization format of the data in the stream or table. One of JSON, AVRO, or DELIMITED.
+	Format       TopicValueFormat       `json:"format"`       // The serialization format of the data in the stream or table. One of JSON, AVRO, or DELIMITED.
 	Topic        string                 `json:"topic"`        // The topic backing the stream or table.
 	Extended     bool                   `json:"extended"`     // A boolean that indicates whether this is an extended description.
 	Statistics   string                 `json:"statistics"`   // A string that contains statistics about production and consumption to and from the backing topic (extended only).
