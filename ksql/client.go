@@ -390,9 +390,13 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *Client) qTOerr(req queryRequest) error {
+func (c *Client) qTOerr(req queryRequest, commandSequence ...int) error {
 	r := Request{
 		KSQL: req.query(),
+	}
+
+	if len(commandSequence) > 0 {
+		r.CommandSequenceNumber = commandSequence[len(commandSequence)-1]
 	}
 
 	res, err := c.Do(r)
