@@ -208,7 +208,7 @@ func (c *Client) Info() (*KSQLServerInfo, error) {
 }
 
 // Do provides a way for running queries against the `/ksql` endpoint
-func (c *Client) Do(r Request) (Response, error) {
+func (c *Client) Do(r Request) (ServerResponse, error) {
 	res, err := c.ksqlRequest(r)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (c *Client) Do(r Request) (Response, error) {
 	log.Printf("[DEBUG] %s", string(body))
 
 	if res.StatusCode >= 200 && res.StatusCode <= 299 {
-		resp := Response{}
+		resp := ServerResponse{}
 		err = json.Unmarshal(body, &resp)
 		return resp, nil
 	}

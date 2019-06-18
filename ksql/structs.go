@@ -38,8 +38,8 @@ type Request struct {
 	streamPropertiesName string
 }
 
-// Response represents the KSQL REST API response to any request.
-type Response []IntResponse
+// ServerResponse represents the KSQL REST API response to any request.
+type ServerResponse []AnyStatementResponse
 
 // ErrResp represents the KSQL REST API error response to any request.
 type ErrResp struct {
@@ -55,41 +55,57 @@ func (e *ErrResp) Error() string {
 	return fmt.Sprintf("%d [%s]: %s\n StackTrace:\n %s", e.ErrorCode, e.Type, e.ErrorMessage, stackTrace)
 }
 
-// IntResponse represents the KSQL REST API available responses structure.
-type IntResponse struct {
+// CurrentStatusResponse represents the KSQL REST API 'CREATE', 'DROP' & 'TERMINATE' statements response.
+type CurrentStatusResponse struct {
+	Type          string `json:"@type"`
+	StatementText string `json:"statementText"`
+	CommandID     string `json:"commandId"`
+	CommandStatus *struct {
+		Message string `json:"message"`
+		Status  string `json:"status"`
+	} `json:"commandStatus"`
+}
+
+// ErrorMessageResponse represents the KSQL REST API parsed error from any statement response.
+type ErrorMessageResponse struct {
+	Type          string      `json:"@type"`
+	StatementText string      `json:"statementText"`
+	ErrorMessage ErrorMessage `json:"errorMessage"`
+}
+
+// SourceDescriptionResponse represents the KSQL REST API 'DESCRIBE' statement response.
+type SourceDescriptionResponse struct {
+	Type          string                `json:"@type"`
+	StatementText string                `json:"statementText"`
+	SourceDescription SourceDescription `json:"sourceDescription"`
+}
+
+// StreamsResponse represents the KSQL REST API 'LIST STREAMS' & 'SHOW STREAMS' statements response.
+type StreamsResponse struct {
+	Type          string   `json:"@type"`
+	StatementText string   `json:"statementText"`
+	Streams       []Stream `json:"streams"`
+}
+
+// TablesResponse represents the KSQL REST API 'LIST TABLES' & 'SHOW TABLES' statements response.
+type TablesResponse struct {
+	Type          string `json:"@type"`
+	StatementText string `json:"statementText"`
+	Tables       []Table `json:"tables"`
+}
+
+// AnyStatementResponse represents the KSQL REST API available responses structure.
+type AnyStatementResponse struct {
 	// DESCRIBE
-	Description *struct {
-		StatementText     string            `json:"statementText"`
-		SourceDescription SourceDescription `json:"sourceDescription"`
-	} `json:"sourceDescription,omitempty"`
-
+	*SourceDescriptionResponse
 	// Errors
-	Error *struct {
-		StatementText string       `json:"statementText"`
-		ErrorMessage  ErrorMessage `json:"errorMessage"`
-	} `json:"error,omitempty"`
-
+	*ErrorMessageResponse
 	// LIST STREAMS, SHOW STREAMS
-	Streams *struct {
-		StatementText string   `json:"statementText"`
-		Streams       []Stream `json:"streams"`
-	} `json:"streams,omitempty"`
-
+	*StreamsResponse
 	// LIST TABLES, SHOW TABLES
-	Tables *struct {
-		StatementText string  `json:"statementText"`
-		Tables        []Table `json:"tables"`
-	} `json:"tables,omitempty"`
-
+	*TablesResponse
 	// CREATE, DROP, TERMINATE
-	Status *struct {
-		StatementText string `json:"statementText"`
-		CommandID     string `json:"commandId"`
-		CommandStatus *struct {
-			Message string `json:"message"`
-			Status  string `json:"status"`
-		} `json:"commandStatus"`
-	} `json:"currentStatus"`
+	*CurrentStatusResponse
 }
 
 // StatusResponse represents the KSQL REST API response status.
