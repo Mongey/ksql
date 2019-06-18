@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -88,12 +89,20 @@ func (c *Client) CreateStream(req *CreateStreamRequest) error {
 
 // DropTable drops a KSQL Table
 func (c *Client) DropTable(req *DropTableRequest) error {
-	return c.qTOerr(req)
+	cmdSeq, err := c.terminateBeforeDrop(req.Name)
+	if err != nil {
+		return err
+	}
+	return c.qTOerr(req, cmdSeq...)
 }
 
 // DropStream drops a KSQL Stream
 func (c *Client) DropStream(req *DropStreamRequest) error {
-	return c.qTOerr(req)
+	cmdSeq, err := c.terminateBeforeDrop(req.Name)
+	if err != nil {
+		return err
+	}
+	return c.qTOerr(req, cmdSeq...)
 }
 
 // Describe gets a KSQL Stream or Table
@@ -407,4 +416,36 @@ func (c *Client) qTOerr(req queryRequest, commandSequence ...int) error {
 
 type queryRequest interface {
 	query() string
+}
+
+func (c *Client) terminateBeforeDrop(name string) ([]int, error) {
+	log.Printf("[LOG] Terminating queries for '%s'", name)
+
+	desc, err := c.Describe(name)
+	commandSequence := make([]int, len(desc.WriteQueries))
+
+	if err != nil {
+		return commandSequence, err
+	}
+
+	if len(desc.ReadQueries) > 0 {
+		dependency := desc.ReadQueries[0].Sinks[0]
+		return commandSequence, fmt.Errorf("could not drop '%s', '%s' needs to be dropped before", name, dependency)
+	}
+
+	for _, q := range desc.WriteQueries {
+		expectedSinks := []string{strings.ToUpper(name)}
+		if !reflect.DeepEqual(q.Sinks, expectedSinks) {
+			return commandSequence, fmt.Errorf("could not drop '%s', the query '%s' should sinks '%v' but '%v' was found instead", name, q.ID, expectedSinks, q.Sinks)
+		}
+		status, err := c.Terminate(&TerminateRequest{Name: q.ID}, commandSequence...)
+		if err != nil {
+			return commandSequence, err
+		}
+		commandSequence = append(commandSequence, status.CommandSequenceNumber)
+	}
+
+	log.Printf("command sequence: %v", commandSequence)
+
+	return commandSequence, nil
 }

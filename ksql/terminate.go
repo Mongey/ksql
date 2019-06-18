@@ -1,6 +1,8 @@
 package ksql
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type TerminateRequest struct {
 	Name string
