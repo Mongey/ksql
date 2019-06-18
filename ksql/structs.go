@@ -33,9 +33,10 @@ type QueryResponse struct {
 
 // Request represents a KSQL REST API request.
 type Request struct {
-	KSQL                 string            `json:"ksql"`
-	StreamsProperties    map[string]string `json:"streamsProperties,omitempty"`
-	streamPropertiesName string
+	CommandSequenceNumber int               `json:"commandSequenceNumber,omitempty"`
+	KSQL                  string            `json:"ksql"`
+	StreamsProperties     map[string]string `json:"streamsProperties,omitempty"`
+	streamPropertiesName  string
 }
 
 // ServerResponse represents the KSQL REST API response to any request.
@@ -64,6 +65,7 @@ type CurrentStatusResponse struct {
 		Message string `json:"message"`
 		Status  string `json:"status"`
 	} `json:"commandStatus"`
+	CommandSequenceNumber int `json:"commandSequenceNumber"`
 }
 
 // ErrorMessageResponse represents the KSQL REST API parsed error from any statement response.

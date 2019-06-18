@@ -178,8 +178,16 @@ func (c *Client) ListTables() ([]Table, error) {
 }
 
 // Terminate terminates the query
-func (c *Client) Terminate(req *TerminateRequest) error {
-	return c.qTOerr(req)
+func (c *Client) Terminate(req *TerminateRequest, cmdSeq ...int) (*CurrentStatusResponse, error) {
+	r := Request{
+		KSQL: req.query(),
+	}
+	if len(cmdSeq) > 0 {
+		r.CommandSequenceNumber = cmdSeq[len(cmdSeq)-1]
+	}
+
+	resp, err := c.Do(r)
+	return resp[0].CurrentStatusResponse, err
 }
 
 // Info returns KSQL server info
