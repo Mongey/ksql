@@ -149,7 +149,7 @@ func testDescribe(t *testing.T, c *Client, name string) {
 
 	expectResourceName(t, name, desc.Name)
 
-	log.Printf("[TEST] DESCRIBE '%s': %+v", name, desc)
+	log.Printf("[TEST] DESCRIBE '%s' result: %+v", name, desc)
 }
 
 func testListStreams(t *testing.T, c *Client, expectedStreams []string) {

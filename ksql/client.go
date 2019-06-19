@@ -215,7 +215,7 @@ func (c *Client) Info() (*KSQLServerInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] %s", string(body))
+	log.Printf("[DEBUG] KSLQ server info: %s", string(body))
 	s := &InfoResponse{}
 	err = json.Unmarshal(body, s)
 
@@ -235,8 +235,7 @@ func (c *Client) Do(r Request) (ServerResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Printf("[DEBUG] %s", string(body))
+	log.Printf("[DEBUG] <― KSQL response: %s", string(body))
 
 	if res.StatusCode >= 200 && res.StatusCode <= 299 {
 		resp := ServerResponse{}
@@ -386,6 +385,7 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[DEBUG] ―> KSQL request: %s", string(b))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/ksql", c.host), bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
@@ -404,7 +404,7 @@ func (c *Client) qTOerr(req queryRequest, commandSequence ...int) error {
 	r.CoordinateInSequence(commandSequence...)
 
 	res, err := c.Do(r)
-	log.Printf("[DEBUG] %v", res)
+	log.Printf("[DEBUG] parsed server response: %+v", res)
 
 	return err
 }
@@ -414,7 +414,7 @@ type queryRequest interface {
 }
 
 func (c *Client) terminateBeforeDrop(name string) ([]int, error) {
-	log.Printf("[LOG] Terminating persistent queries for '%s'", name)
+	log.Printf("[LOG] terminating persistent queries for '%s'", name)
 
 	desc, err := c.Describe(name)
 	var commandSequence []int
