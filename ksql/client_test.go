@@ -105,6 +105,34 @@ func TestCreateAsSelectTerminateOnDrop(t *testing.T) {
 	testListStreams(t, c, []string{})
 }
 
+func TestCreateStreamTwice(t *testing.T) {
+	c := createNewClient(t)
+	defer deleteAllTablesAndStreams(t, c)
+
+	usersTopic := createSimpleTopic(t, "users")
+	defer usersTopic.Delete()
+
+	streamParams := &CreateStreamRequest{
+		Name: "userUpdates",
+		Fields: map[string]string{
+			"gender": "string",
+		},
+		Settings: map[string]string{
+			"kafka_topic":  usersTopic.Name,
+			"value_format": "JSON",
+		},
+	}
+	userUpdateStream := createTestStream(t, c, streamParams)
+	defer userUpdateStream.Drop()
+
+	if c.CreateStream(&userUpdateStream.CreateStreamRequest) == nil {
+		t.Fatalf("should not be able to create stream '%s' twice", userUpdateStream.Name)
+	}
+
+	testListStreams(t, c, []string{userUpdateStream.Name})
+	testDescribe(t, c, userUpdateStream.Name)
+}
+
 func TestListEmptyStreams(t *testing.T) {
 	c := createNewClient(t)
 	defer deleteAllTablesAndStreams(t, c)
