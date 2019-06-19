@@ -121,7 +121,7 @@ func testDescribe(t *testing.T, c *Client, name string) {
 
 	expectResourceName(t, name, desc.Name)
 
-	log.Printf("%v", desc)
+	log.Printf("[TEST] DESCRIBE '%s': %+v", name, desc)
 }
 
 func testListStreams(t *testing.T, c *Client, expectedStreams []string) {
@@ -135,7 +135,7 @@ func testListStreams(t *testing.T, c *Client, expectedStreams []string) {
 		found := false
 		for j, n := range expectedStreams {
 			if s.Name == strings.ToUpper(n) {
-				log.Printf("stream %d: %s", i, s.Name)
+				log.Printf("[TEST] stream %d: %s", i, s.Name)
 				found = true
 				expectedStreams = removeFromSlice(expectedStreams, j)
 				break
@@ -263,7 +263,7 @@ func createTestStream(t *testing.T, c *Client, req *CreateStreamRequest) *stream
 		if i > 10 {
 			t.Fatalf("unable to create stream '%s': %v", s.Name, err)
 		}
-		log.Printf("[DEBUG] waiting on stream '%s' creation", s.Name)
+		log.Printf("[TEST] waiting on stream '%s' creation", s.Name)
 		time.Sleep(1 * time.Second)
 		i++
 	}
@@ -289,7 +289,7 @@ type streamAsSelect struct {
 
 func (s *streamAsSelect) Create() error {
 	q := fmt.Sprintf("CREATE STREAM %s AS %s;", s.Name, s.query)
-	log.Printf("[WARN] Query %s", q)
+	log.Printf("[TEST] %s", q)
 
 	_, err := s.client.Do(Request{KSQL: q})
 	return err

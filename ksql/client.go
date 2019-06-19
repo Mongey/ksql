@@ -443,9 +443,8 @@ func (c *Client) terminateBeforeDrop(name string) ([]int, error) {
 			return commandSequence, err
 		}
 		commandSequence = append(commandSequence, status.CommandSequenceNumber)
+		log.Printf("[DEBUG] command sequence: %v", commandSequence)
 	}
-
-	log.Printf("command sequence: %v", commandSequence)
 
 	return commandSequence, nil
 }
