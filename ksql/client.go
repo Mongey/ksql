@@ -419,10 +419,10 @@ type queryRequest interface {
 }
 
 func (c *Client) terminateBeforeDrop(name string) ([]int, error) {
-	log.Printf("[LOG] Terminating queries for '%s'", name)
+	log.Printf("[LOG] Terminating persistent queries for '%s'", name)
 
 	desc, err := c.Describe(name)
-	commandSequence := make([]int, len(desc.WriteQueries))
+	var commandSequence []int
 
 	if err != nil {
 		return commandSequence, err
