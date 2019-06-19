@@ -191,9 +191,7 @@ func (c *Client) Terminate(req *TerminateRequest, cmdSeq ...int) (*CurrentStatus
 	r := Request{
 		KSQL: req.query(),
 	}
-	if len(cmdSeq) > 0 {
-		r.CommandSequenceNumber = cmdSeq[len(cmdSeq)-1]
-	}
+	r.CoordinateInSequence(cmdSeq...)
 
 	resp, err := c.Do(r)
 	return resp[0].CurrentStatusResponse, err
@@ -403,10 +401,7 @@ func (c *Client) qTOerr(req queryRequest, commandSequence ...int) error {
 	r := Request{
 		KSQL: req.query(),
 	}
-
-	if len(commandSequence) > 0 {
-		r.CommandSequenceNumber = commandSequence[len(commandSequence)-1]
-	}
+	r.CoordinateInSequence(commandSequence...)
 
 	res, err := c.Do(r)
 	log.Printf("[DEBUG] %v", res)

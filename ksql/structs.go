@@ -31,14 +31,6 @@ type QueryResponse struct {
 	ErrorMessage ErrorMessage `json:"errorMessage"`
 }
 
-// Request represents a KSQL REST API request.
-type Request struct {
-	CommandSequenceNumber int               `json:"commandSequenceNumber,omitempty"`
-	KSQL                  string            `json:"ksql"`
-	StreamsProperties     map[string]string `json:"streamsProperties,omitempty"`
-	streamPropertiesName  string
-}
-
 // ServerResponse represents the KSQL REST API response to any request.
 type ServerResponse []AnyStatementResponse
 
