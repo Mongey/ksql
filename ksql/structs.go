@@ -60,18 +60,20 @@ type CurrentStatusResponse struct {
 	CommandSequenceNumber int `json:"commandSequenceNumber"`
 }
 
+// DescribeResponse represents the KSQL REST API response of a "DESCRIBE" query.
+// See https://docs.confluent.io/current/ksql/docs/developer-guide/api.html#run-a-ksql-statement
+// for KSQL REST API reference.
+type DescribeResponse []struct {
+	Type              string            `json:"@type"`
+	StatementText     string            `json:"statementText"`
+	SourceDescription SourceDescription `json:"sourceDescription"`
+}
+
 // ErrorMessageResponse represents the KSQL REST API parsed error from any statement response.
 type ErrorMessageResponse struct {
 	Type          string      `json:"@type"`
 	StatementText string      `json:"statementText"`
 	ErrorMessage ErrorMessage `json:"errorMessage"`
-}
-
-// SourceDescriptionResponse represents the KSQL REST API 'DESCRIBE' statement response.
-type SourceDescriptionResponse struct {
-	Type          string                `json:"@type"`
-	StatementText string                `json:"statementText"`
-	SourceDescription SourceDescription `json:"sourceDescription"`
 }
 
 // StreamsResponse represents the KSQL REST API 'LIST STREAMS' & 'SHOW STREAMS' statements response.
@@ -91,7 +93,7 @@ type TablesResponse struct {
 // AnyStatementResponse represents the KSQL REST API available responses structure.
 type AnyStatementResponse struct {
 	// DESCRIBE
-	*SourceDescriptionResponse
+	*DescribeResponse
 	// Errors
 	*ErrorMessageResponse
 	// LIST STREAMS, SHOW STREAMS
@@ -180,11 +182,3 @@ type SourceDescription struct {
 	Partitions   int                    `json:"partitions"`   // The number of partitions in the backing topic (extended only).
 }
 
-// DescribeResponse represents the KSQL REST API response of a "DESCRIBE" query.
-// See https://docs.confluent.io/current/ksql/docs/developer-guide/api.html#run-a-ksql-statement
-// for KSQL REST API reference.
-type DescribeResponse []struct {
-	Type              string            `json:"@type"`
-	StatementText     string            `json:"statementText"`
-	SourceDescription SourceDescription `json:"sourceDescription"`
-}
