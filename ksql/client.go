@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -88,12 +89,47 @@ func (c *Client) CreateStream(req *CreateStreamRequest) error {
 
 // DropTable drops a KSQL Table
 func (c *Client) DropTable(req *DropTableRequest) error {
-	return c.qTOerr(req)
+	cmdSeq, err := c.terminateBeforeDrop(req.Name)
+	if err != nil {
+		return err
+	}
+	return c.qTOerr(req, cmdSeq...)
 }
 
 // DropStream drops a KSQL Stream
 func (c *Client) DropStream(req *DropStreamRequest) error {
-	return c.qTOerr(req)
+	cmdSeq, err := c.terminateBeforeDrop(req.Name)
+	if err != nil {
+		return err
+	}
+	return c.qTOerr(req, cmdSeq...)
+}
+
+// Describe gets a KSQL Stream or Table
+func (c *Client) Describe(name string) (*SourceDescription, error) {
+	r := Request{
+		KSQL: fmt.Sprintf("DESCRIBE %s;", name),
+	}
+	resp, err := c.ksqlRequest(r)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := DescribeResponse{}
+	err = json.Unmarshal(body, &res)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &res[0].SourceDescription, nil
 }
 
 // ListStreams returns a slice of available streams
@@ -150,6 +186,18 @@ func (c *Client) ListTables() ([]Table, error) {
 	return res[0].Tables, nil
 }
 
+// Terminate terminates the query
+func (c *Client) Terminate(req *TerminateRequest, cmdSeq ...int) (*CurrentStatusResponse, error) {
+	r := Request{
+		KSQL: req.query(),
+	}
+	r.CoordinateInSequence(cmdSeq...)
+
+	resp, err := c.Do(r)
+	return resp[0].CurrentStatusResponse, err
+}
+
+// Info returns KSQL server info
 func (c *Client) Info() (*KSQLServerInfo, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", c.host), nil)
 	if err != nil {
@@ -167,7 +215,7 @@ func (c *Client) Info() (*KSQLServerInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] %s", string(body))
+	log.Printf("[DEBUG] KSLQ server info: %s", string(body))
 	s := &InfoResponse{}
 	err = json.Unmarshal(body, s)
 
@@ -175,7 +223,7 @@ func (c *Client) Info() (*KSQLServerInfo, error) {
 }
 
 // Do provides a way for running queries against the `/ksql` endpoint
-func (c *Client) Do(r Request) (Response, error) {
+func (c *Client) Do(r Request) (ServerResponse, error) {
 	res, err := c.ksqlRequest(r)
 	if err != nil {
 		return nil, err
@@ -187,11 +235,10 @@ func (c *Client) Do(r Request) (Response, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Printf("[DEBUG] %s", string(body))
+	log.Printf("[DEBUG] <― KSQL response: %s", string(body))
 
 	if res.StatusCode >= 200 && res.StatusCode <= 299 {
-		resp := Response{}
+		resp := ServerResponse{}
 		err = json.Unmarshal(body, &resp)
 		return resp, nil
 	}
@@ -338,6 +385,7 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[DEBUG] ―> KSQL request: %s", string(b))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/ksql", c.host), bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
@@ -349,17 +397,49 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-func (c *Client) qTOerr(req queryRequest) error {
+func (c *Client) qTOerr(req queryRequest, commandSequence ...int) error {
 	r := Request{
 		KSQL: req.query(),
 	}
+	r.CoordinateInSequence(commandSequence...)
 
 	res, err := c.Do(r)
-	log.Printf("[DEBUG] %v", res)
+	log.Printf("[DEBUG] parsed server response: %+v", res)
 
 	return err
 }
 
 type queryRequest interface {
 	query() string
+}
+
+func (c *Client) terminateBeforeDrop(name string) ([]int, error) {
+	log.Printf("[LOG] terminating persistent queries for '%s'", name)
+
+	desc, err := c.Describe(name)
+	var commandSequence []int
+
+	if err != nil {
+		return commandSequence, err
+	}
+
+	if len(desc.ReadQueries) > 0 {
+		dependency := desc.ReadQueries[0].Sinks[0]
+		return commandSequence, fmt.Errorf("could not drop '%s', '%s' needs to be dropped before", name, dependency)
+	}
+
+	for _, q := range desc.WriteQueries {
+		expectedSinks := []string{strings.ToUpper(name)}
+		if !reflect.DeepEqual(q.Sinks, expectedSinks) {
+			return commandSequence, fmt.Errorf("could not drop '%s', the query '%s' should sinks '%v' but '%v' was found instead", name, q.ID, expectedSinks, q.Sinks)
+		}
+		status, err := c.Terminate(&TerminateRequest{Name: q.ID}, commandSequence...)
+		if err != nil {
+			return commandSequence, err
+		}
+		commandSequence = append(commandSequence, status.CommandSequenceNumber)
+		log.Printf("[DEBUG] command sequence: %v", commandSequence)
+	}
+
+	return commandSequence, nil
 }
