@@ -109,7 +109,7 @@ func TestCreateStreamTwice(t *testing.T) {
 	c := createNewClient(t)
 	defer deleteAllTablesAndStreams(t, c)
 
-	usersTopic := createSimpleTopic(t, "users")
+	usersTopic := createSimpleTopic(t, "otherTopic")
 	defer usersTopic.Delete()
 
 	streamParams := &CreateStreamRequest{
