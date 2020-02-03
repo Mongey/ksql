@@ -284,5 +284,6 @@ func (c *Client) RemoveBasicAuth(username, password string) {
 }
 
 func makeBasicAuth(username, password string) string {
-	return base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	auth := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
+	return "Basic " + auth
 }
