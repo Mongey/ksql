@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ type Client struct {
 	client *http.Client
 	host   string
 	Logger
+	basicAuth BasicAuth
 }
 
 // NewClient returns a new client
@@ -129,6 +131,9 @@ func (c *Client) Status(commandID string) (*StatusResponse, error) {
 		return nil, err
 	}
 	req = req.WithContext(c)
+	if c.basicAuth != (BasicAuth{}) {
+		req.Header.Add("Authorization", makeBasicAuth(c.basicAuth.username, c.basicAuth.password))
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -226,6 +231,10 @@ func (c *Client) doQueryContext(ctx context.Context, r Request) (*http.Response,
 	}
 	req = req.WithContext(ctx)
 
+	if c.basicAuth != (BasicAuth{}) {
+		req.Header.Add("Authorization", makeBasicAuth(c.basicAuth.username, c.basicAuth.password))
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	return c.client.Do(req)
 }
@@ -255,6 +264,25 @@ func (c *Client) ksqlRequest(r Request) (*http.Response, error) {
 	}
 	req = req.WithContext(c)
 
+	if c.basicAuth != (BasicAuth{}) {
+		req.Header.Add("Authorization", makeBasicAuth(c.basicAuth.username, c.basicAuth.password))
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	return c.client.Do(req)
+}
+
+func (c *Client) AddBasicAuth(username, password string) {
+	c.basicAuth = BasicAuth{
+		Username: username,
+		Password: password,
+	}
+}
+
+func (c *Client) RemoveBasicAuth(username, password string) {
+	c.basicAuth = BasicAuth{}
+}
+
+func makeBasicAuth(username, password string) string {
+	return base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 }
