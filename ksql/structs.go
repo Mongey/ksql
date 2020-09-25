@@ -80,3 +80,8 @@ type Function struct {
 	Name string `json:"name"`
 	Type string `json:"type"` // 'scalar' or 'aggregate'
 }
+
+type BasicAuth struct {
+	Username string
+	Password string
+}
